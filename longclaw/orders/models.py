@@ -1,9 +1,11 @@
 from datetime import datetime
 from django.db import models
+from wagtail.core.models import CollectionMember
+
 from longclaw.settings import PRODUCT_VARIANT_MODEL
 from longclaw.shipping.models import Address
 
-class Order(models.Model):
+class Order(CollectionMember, models.Model):
     SUBMITTED = 1
     FULFILLED = 2
     CANCELLED = 3

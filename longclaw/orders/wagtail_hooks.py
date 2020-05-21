@@ -6,7 +6,9 @@ from wagtail.contrib.modeladmin.options import (
     ModelAdmin, modeladmin_register
 )
 from wagtail.contrib.modeladmin.helpers import ButtonHelper
-from wagtail.contrib.modeladmin.views import InspectView
+from wagtail.contrib.modeladmin.views import InspectView, IndexView
+from wagtail.core.models import Collection
+
 from longclaw.orders.models import Order
 from longclaw.settings import API_URL_PREFIX
 
@@ -85,6 +87,26 @@ class DetailView(InspectView):
         return 'orders_detail.html'
 
 
+class IndexView(IndexView):
+    collections = Collection.objects.all()
+
+    def get_queryset(self, request=None):
+        if 'collection_id' in self.params and self.params.get('collection_id') == '':
+            del self.params['collection_id']
+        return super().get_queryset(request)
+
+    def get_context_data(self, **kwargs):
+        context = {
+            'collections': self.collections
+        }
+        if 'collection_id' in self.params:
+            current_collection = Collection.objects.get(id=self.params.get('collection_id'))
+            context.update({'current_collection': current_collection})
+
+        context.update(kwargs)
+        return super().get_context_data(**context)
+
+
 class OrderModelAdmin(ModelAdmin):
     model = Order
     menu_order = 100
@@ -94,6 +116,8 @@ class OrderModelAdmin(ModelAdmin):
     list_display = ('id', 'status', 'status_note', 'email',
                     'payment_date', 'total_items', 'total')
     list_filter = ('status', 'payment_date', 'email')
+    index_view_class = IndexView
+    index_template_name = 'orders/index.html'
     inspect_view_enabled = True
     detail_view_class = DetailView
     button_helper_class = OrderButtonHelper

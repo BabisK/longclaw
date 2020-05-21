@@ -1,9 +1,9 @@
 from django.db import models
-from wagtail.core.models import Page
+from wagtail.core.models import Page, CollectionMember
 
 
 # Abstract base classes a user can use to implement their own product system
-class ProductBase(Page):
+class ProductBase(CollectionMember, Page):
     """Base classes for ``Product`` implementations. All this provides are
     a few helper methods for ``ProductVariant``'s. It assumes that ``ProductVariant``'s
     have a ``related_name`` of ``variants``
