@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
+from wagtail.core.models import Collection, CollectionMember, get_root_collection_id
 from django.dispatch import receiver
 
 from longclaw.basket.signals import basket_modified
@@ -7,7 +9,7 @@ from wagtail.admin.edit_handlers import FieldPanel
 from ..signals import address_modified
 
 
-class ShippingRate(models.Model):
+class ShippingRate(CollectionMember, models.Model):
     """
     An individual shipping rate. This can be applied to
     multiple countries.
@@ -25,12 +27,21 @@ class ShippingRate(models.Model):
     destination = models.ForeignKey('shipping.Address', blank=True, null=True, on_delete=models.PROTECT)
     processor = models.ForeignKey('shipping.ShippingRateProcessor', blank=True, null=True, on_delete=models.PROTECT)
 
+    collection = models.ForeignKey(
+        Collection,
+        default=get_root_collection_id,
+        verbose_name=_('collection'),
+        related_name='+',
+        on_delete=models.PROTECT
+    )
+
     panels = [
         FieldPanel('name'),
         FieldPanel('rate'),
         FieldPanel('carrier'),
         FieldPanel('description'),
-        FieldPanel('countries')
+        FieldPanel('countries'),
+        FieldPanel('collection')
     ]
 
     def __str__(self):

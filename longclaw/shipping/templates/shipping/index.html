@@ -13,9 +13,9 @@
   {{ block.super }}
   <script>
     window.headerSearch = {
-      url: "{% url 'orders_order_modeladmin_index' %}",
+      url: "{% url 'shipping_shippingrate_modeladmin_index' %}",
       termInput: "#id_q",
-      targetOutput: "#orders_order_modeladmin_index-results"
+      targetOutput: "#shipping_shippingrate_modeladmin_index-results"
     }
 
     $(function() {
@@ -67,7 +67,7 @@
                         {% block result_list %}
                         {% if collections %}
                           <div class="nice-padding">
-                          <form class="image-search search-bar" action="{% url 'orders_order_modeladmin_index' %}" method="GET" novalidate>
+                          <form class="image-search search-bar" action="{% url 'shipping_shippingrate_modeladmin_index' %}" method="GET" novalidate>
                             <ul class="fields">
                               {% include "wagtailadmin/shared/collection_chooser.html" %}
                             </ul>

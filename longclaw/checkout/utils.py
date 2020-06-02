@@ -23,6 +23,16 @@ def create_order(email,
     Create an order from a basket and customer infomation
     """
     basket_items, current_basket_id = get_basket_items(request)
+
+    order_collection = None
+    if len(basket_items) > 0:
+       order_collection = basket_items[0].variant.product.collection
+       collection_id = basket_items[0].variant.product.collection.id
+       for item in basket_items:
+          if item.variant.product.collection.id != collection_id:
+              print('All items in Basket should be of the same collection')
+              raise Exception('All items in Basket should be of the same collection')
+
     if addresses:
         # Longclaw < 0.2 used 'shipping_name', longclaw > 0.2 uses a consistent
         # prefix (shipping_address_xxxx)
@@ -76,6 +86,7 @@ def create_order(email,
         shipping_rate = Decimal(0)
 
     order = Order(
+        collection=order_collection,
         email=email,
         ip_address=ip_address,
         shipping_address=shipping_address,
