@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from wagtail.core.models import Collection, CollectionMember, get_root_collection_id
+from wagtail.core.models import \
+    Collection, CollectionMember, get_root_collection_id
 from django.dispatch import receiver
 
 from longclaw.basket.signals import basket_modified

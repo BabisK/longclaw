@@ -9,12 +9,12 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('wagtailcore', '0045_assign_unlock_grouppagepermission'),
-        ('orders', '0001_initial'),
+        ('shipping', '0003_auto_20190322_1429'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='order',
+            model_name='shippingrate',
             name='collection',
             field=models.ForeignKey(default=wagtail.core.models.get_root_collection_id, on_delete=django.db.models.deletion.PROTECT, related_name='+', to='wagtailcore.Collection', verbose_name='collection'),
         ),

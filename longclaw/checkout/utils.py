@@ -1,4 +1,5 @@
 from decimal import Decimal
+from django.core.exceptions import FieldDoesNotExist
 from django.utils.module_loading import import_string
 from django.utils import timezone
 from ipware.ip import get_real_ip
@@ -7,9 +8,11 @@ from longclaw.basket.utils import get_basket_items, destroy_basket
 from longclaw.shipping.utils import get_shipping_cost
 from longclaw.checkout.errors import PaymentError
 from longclaw.orders.models import Order, OrderItem
+from longclaw.products.models import ProductWithCollectionBase
 from longclaw.shipping.models import Address
 from longclaw.configuration.models import Configuration
 from longclaw.utils import GATEWAY
+from wagtail.core.models import Collection, get_root_collection_id
 
 
 def create_order(email,
@@ -24,26 +27,41 @@ def create_order(email,
     """
     basket_items, current_basket_id = get_basket_items(request)
 
-    order_collection = None
-    if len(basket_items) > 0:
-       order_collection = basket_items[0].variant.product.collection
-       collection_id = basket_items[0].variant.product.collection.id
-       for item in basket_items:
-          if item.variant.product.collection.id != collection_id:
-              print('All items in Basket should be of the same collection')
-              raise Exception('All items in Basket should be of the same collection')
+    if not len(basket_items) > 0:
+        raise FieldDoesNotExist('No items in Basket!')
+
+    collection_id = get_root_collection_id()
+
+    for item in basket_items:
+        if isinstance(item.variant.product, ProductWithCollectionBase):
+            collection_id = item.variant.product.collection.id
+            break
 
     if addresses:
         # Longclaw < 0.2 used 'shipping_name', longclaw > 0.2 uses a consistent
         # prefix (shipping_address_xxxx)
+
         try:
             shipping_name = addresses['shipping_name']
         except KeyError:
             shipping_name = addresses['shipping_address_name']
 
+        if isinstance(addresses['shipping_address_country'], str):
+            from longclaw.shipping.models.locations import Country
+            addresses['shipping_address_country'] = Country.objects.get(
+                iso=addresses['shipping_address_country']
+            )
+            shipping_option='operatorShippingGreece'
+
+        print('We have addresses here...')
+        print('Printing addresses dict: ' + str(addresses))
+
         shipping_country = addresses['shipping_address_country']
         if not shipping_country:
             shipping_country = None
+
+        print('Shipping Country is: ' + str(shipping_country))
+
         shipping_address, _ = Address.objects.get_or_create(name=shipping_name,
                                                             line_1=addresses[
                                                                 'shipping_address_line1'],
@@ -73,20 +91,24 @@ def create_order(email,
         shipping_country = shipping_address.country
 
     ip_address = get_real_ip(request)
+
+    print('before we get shipping cost... - shipping_country: ' + str(shipping_country) + ' - shipping_option: ' + str(shipping_option))
     if shipping_country and shipping_option:
         site_settings = Configuration.for_site(request.site)
         shipping_rate = get_shipping_cost(
+            request.user,
             site_settings,
             shipping_address.country.pk,
             shipping_option,
             basket_id=current_basket_id,
             destination=shipping_address,
+            collection_id=collection_id
         )['rate']
     else:
         shipping_rate = Decimal(0)
 
     order = Order(
-        collection=order_collection,
+        collection=Collection.objects.get(pk=collection_id),
         email=email,
         ip_address=ip_address,
         shipping_address=shipping_address,

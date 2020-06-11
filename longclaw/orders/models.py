@@ -1,7 +1,8 @@
 from datetime import datetime
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from wagtail.core.models import Collection, CollectionMember, get_root_collection_id
+from wagtail.core.models import \
+    Collection, CollectionMember, get_root_collection_id
 from longclaw.settings import PRODUCT_VARIANT_MODEL
 from longclaw.shipping.models import Address
 

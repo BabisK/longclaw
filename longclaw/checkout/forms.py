@@ -7,5 +7,6 @@ class CheckoutForm(forms.Form):
     email = forms.EmailField()
     shipping_option = forms.CharField(widget=forms.Select, required=False)
     different_billing_address = forms.BooleanField(required=False)
+
     class Media:
         js = ('checkout.js',)

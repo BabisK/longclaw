@@ -34,6 +34,8 @@ class CheckoutView(TemplateView):
         site = getattr(self.request, 'site', None)
         context['checkout_form'] = self.checkout_form(
             self.request.POST or None)
+
+        print('CHeckout form printing fields: ' + str(context['checkout_form'].fields['shipping_option'].__dict__))
         context['shipping_form'] = self.shipping_address_form(
             self.request.POST or None,
             prefix='shipping',
