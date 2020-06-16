@@ -46,21 +46,9 @@ def create_order(email,
         except KeyError:
             shipping_name = addresses['shipping_address_name']
 
-        if isinstance(addresses['shipping_address_country'], str):
-            from longclaw.shipping.models.locations import Country
-            addresses['shipping_address_country'] = Country.objects.get(
-                iso=addresses['shipping_address_country']
-            )
-            shipping_option='operatorShippingGreece'
-
-        print('We have addresses here...')
-        print('Printing addresses dict: ' + str(addresses))
-
         shipping_country = addresses['shipping_address_country']
         if not shipping_country:
             shipping_country = None
-
-        print('Shipping Country is: ' + str(shipping_country))
 
         shipping_address, _ = Address.objects.get_or_create(name=shipping_name,
                                                             line_1=addresses[
@@ -92,7 +80,6 @@ def create_order(email,
 
     ip_address = get_real_ip(request)
 
-    print('before we get shipping cost... - shipping_country: ' + str(shipping_country) + ' - shipping_option: ' + str(shipping_option))
     if shipping_country and shipping_option:
         site_settings = Configuration.for_site(request.site)
         shipping_rate = get_shipping_cost(

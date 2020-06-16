@@ -43,7 +43,6 @@ def get_shipping_cost(
 
         count = qrs.count()
         if count == 1:
-            print('Count is 1')
             shipping_rate_qrs = qrs[0]
             shipping_rate = {
                 "rate": shipping_rate_qrs.rate,
@@ -67,7 +66,6 @@ def get_shipping_cost(
 
         count = qrs.count()
         if count == 1:
-            print('Count 2')
             shipping_rate_qrs = qrs[0]
             shipping_rate = {
                 "rate": shipping_rate_qrs.rate,
