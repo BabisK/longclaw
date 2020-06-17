@@ -34,7 +34,6 @@ class CheckoutView(TemplateView):
         site = getattr(self.request, 'site', None)
         context['checkout_form'] = self.checkout_form(
             self.request.POST or None)
-
         context['shipping_form'] = self.shipping_address_form(
             self.request.POST or None,
             prefix='shipping',

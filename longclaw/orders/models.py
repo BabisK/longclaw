@@ -6,7 +6,6 @@ from wagtail.core.models import \
 from longclaw.settings import PRODUCT_VARIANT_MODEL
 from longclaw.shipping.models import Address
 
-
 class Order(CollectionMember, models.Model):
     SUBMITTED = 1
     FULFILLED = 2

@@ -2,8 +2,7 @@ from django.forms import ModelForm, ModelChoiceField
 from django.utils.translation import gettext as _
 from longclaw.configuration.models import Configuration
 from longclaw.shipping.models import Address, Country, ShippingRate
-from wagtail.admin.forms.collections import (
-    BaseCollectionMemberForm, collection_member_permission_formset_factory)
+from wagtail.admin.forms.collections import collection_member_permission_formset_factory
 
 class AddressForm(ModelForm):
     class Meta:

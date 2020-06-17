@@ -6,9 +6,7 @@ from longclaw.products.models import ProductWithCollectionBase
 from longclaw.stats import stats
 from longclaw.configuration.models import Configuration
 from longclaw.utils import ProductVariant, maybe_get_product_model
-from wagtail.core.permission_policies.collections \
-    import CollectionPermissionPolicy
-
+from wagtail.core.permission_policies.collections import CollectionPermissionPolicy
 
 
 class LongclawSummaryItem(SummaryItem):
@@ -51,10 +49,8 @@ class OutstandingOrders(LongclawSummaryItem):
             'icon': 'icon-warning'
         }
 
-
 class ProductCount(LongclawSummaryItem):
     order = 20
-
     def get_context(self):
         product_model = maybe_get_product_model()
         if product_model:
@@ -78,7 +74,6 @@ class ProductCount(LongclawSummaryItem):
 
         else:
             count = ProductVariant.objects.all().count()
-
         return {
             'total': count,
             'text': 'Product',
@@ -90,11 +85,7 @@ class MonthlySales(LongclawSummaryItem):
     order = 30
     def get_context(self):
         settings = Configuration.for_site(self.request.site)
-        month_start, month_end = stats.current_month()
-        sales = stats.sales_for_time_period(
-            month_start, month_end, self.request.user
-        )
-
+        sales = stats.sales_for_time_period(*stats.current_month(), self.request.user)
         return {
             'total': "{}{}".format(settings.currency_html_code,
                                    sum(order.total for order in sales)),
@@ -108,9 +99,7 @@ class LongclawStatsPanel(SummaryItem):
     template = 'stats/stats_panel.html'
     def get_context(self):
         month_start, month_end = stats.current_month()
-        daily_sales = stats.daily_sales(
-            month_start, month_end, self.request.user
-        )
+        daily_sales = stats.daily_sales(month_start, month_end, self.request.user)
         labels = [(month_start + datetime.timedelta(days=x)).strftime('%Y-%m-%d')
                   for x in range(0, datetime.datetime.now().day)]
         daily_income = [0] * len(labels)
@@ -118,10 +107,7 @@ class LongclawStatsPanel(SummaryItem):
             i = labels.index(k)
             daily_income[i] = float(sum(order.total for order in order_group))
 
-        popular_products = stats.sales_by_product(
-            month_start, month_end, user=self.request.user
-        )[:5]
-
+        popular_products = stats.sales_by_product(month_start, month_end, user=self.request.user)[:5]
         return {
             "daily_income": daily_income,
             "labels": labels,

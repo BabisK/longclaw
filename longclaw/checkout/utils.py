@@ -1,6 +1,5 @@
 from decimal import Decimal
 from django.core.exceptions import FieldDoesNotExist
-from django.utils.module_loading import import_string
 from django.utils import timezone
 from ipware.ip import get_real_ip
 
@@ -40,7 +39,6 @@ def create_order(email,
     if addresses:
         # Longclaw < 0.2 used 'shipping_name', longclaw > 0.2 uses a consistent
         # prefix (shipping_address_xxxx)
-
         try:
             shipping_name = addresses['shipping_name']
         except KeyError:
@@ -49,7 +47,6 @@ def create_order(email,
         shipping_country = addresses['shipping_address_country']
         if not shipping_country:
             shipping_country = None
-
         shipping_address, _ = Address.objects.get_or_create(name=shipping_name,
                                                             line_1=addresses[
                                                                 'shipping_address_line1'],
@@ -79,7 +76,6 @@ def create_order(email,
         shipping_country = shipping_address.country
 
     ip_address = get_real_ip(request)
-
     if shipping_country and shipping_option:
         site_settings = Configuration.for_site(request.site)
         shipping_rate = get_shipping_cost(
