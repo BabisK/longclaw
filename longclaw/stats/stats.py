@@ -6,8 +6,7 @@ import calendar
 from datetime import datetime
 from django.db.models import Q, Sum, F
 from longclaw.orders.models import Order, OrderItem
-from wagtail.core.permission_policies.collections \
-    import CollectionPermissionPolicy
+from wagtail.core.permission_policies.collections import CollectionPermissionPolicy
 
 
 def current_month():

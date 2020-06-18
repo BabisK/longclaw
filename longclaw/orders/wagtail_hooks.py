@@ -7,15 +7,13 @@ from wagtail.contrib.modeladmin.options import (
     ModelAdmin, modeladmin_register
 )
 from wagtail.contrib.modeladmin.helpers import ButtonHelper
-from wagtail.contrib.modeladmin.views import \
-    InspectView, IndexView, CreateView, EditView
+from wagtail.contrib.modeladmin.views import InspectView, IndexView, CreateView, EditView
 from wagtail.core.models import Collection
 from .forms import GroupOrderPermissionFormSet
 from wagtail.core import hooks
 from longclaw.orders.models import Order
 from longclaw.settings import API_URL_PREFIX
 from longclaw.utils import CustomCollectionPermissionHelper
-
 
 class OrderButtonHelper(ButtonHelper):
 
@@ -62,7 +60,6 @@ class OrderButtonHelper(ButtonHelper):
         ph = self.permission_helper
         usr = self.request.user
         pk = quote(getattr(obj, self.opts.pk.attname))
-
         btns = []
         if ph.user_can_inspect_obj(usr, obj):
             btns.append(self.detail_button(
@@ -87,8 +84,7 @@ class DetailView(InspectView):
             'api_url_prefix': API_URL_PREFIX
         }
         context.update(kwargs)
-        new_context = super(DetailView, self).get_context_data(**context)
-        return new_context
+        return super(DetailView, self).get_context_data(**context)
 
     def get_template_names(self):
         return 'orders_detail.html'

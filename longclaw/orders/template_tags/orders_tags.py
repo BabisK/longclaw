@@ -184,4 +184,4 @@ def result_row_value_display(context, index):
 
 @register.filter
 def get_content_type_for_obj(obj):
-return obj.__class__._meta.verbose_name
+    return obj.__class__._meta.verbose_name

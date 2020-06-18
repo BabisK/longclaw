@@ -17,7 +17,6 @@ class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
     shipping_address = AddressSerializer()
     total = serializers.SerializerMethodField()
-    # collection = serializers.RelatedField(source='collection')
 
     class Meta:
         model = Order
