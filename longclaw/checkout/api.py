@@ -42,16 +42,13 @@ def create_order_with_token(request):
                         status=status.HTTP_400_BAD_REQUEST)
 
     # Create the order
-    try:
-        order = create_order(
-            email,
-            request,
-            addresses=address,
-            shipping_option=shipping_option,
-        )
-    except FieldDoesNotExist:
-        return Response(data={"message": "Cannot process Order without Items"},
-                        status=status.HTTP_400_BAD_REQUEST)
+
+    order = create_order(
+        email,
+        request,
+        addresses=address,
+        shipping_option=shipping_option,
+    )
 
     order.payment_date = timezone.now()
     order.transaction_id = transaction_id

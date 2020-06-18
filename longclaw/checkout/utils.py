@@ -27,9 +27,6 @@ def create_order(email,
     """
     basket_items, current_basket_id = get_basket_items(request)
 
-    if not len(basket_items) > 0:
-        raise FieldDoesNotExist('No items in Basket!')
-
     collection_id = get_root_collection_id()
 
     for item in basket_items:
