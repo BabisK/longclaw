@@ -1,19 +1,12 @@
+from collectionmodeladmin.base import CollectionModelAdmin, collection_modeladmin_register
 from django.conf.urls import url
 from django.contrib.admin.utils import quote
-from django.contrib.auth.models import Permission
 from django.utils.translation import ugettext as _
 
-from wagtail.contrib.modeladmin.options import (
-    ModelAdmin, modeladmin_register
-)
 from wagtail.contrib.modeladmin.helpers import ButtonHelper
-from wagtail.contrib.modeladmin.views import InspectView, IndexView, CreateView, EditView
-from wagtail.core.models import Collection
-from .forms import GroupOrderPermissionFormSet
-from wagtail.core import hooks
+from wagtail.contrib.modeladmin.views import InspectView
 from longclaw.orders.models import Order
 from longclaw.settings import API_URL_PREFIX
-from longclaw.utils import CustomCollectionPermissionHelper
 
 class OrderButtonHelper(ButtonHelper):
 
@@ -90,75 +83,7 @@ class DetailView(InspectView):
         return 'orders_detail.html'
 
 
-class CreateView(CreateView):
-
-    def get_form_class(self):
-        form_class = super().get_form_class()
-        user = self.request.user
-
-        if user.is_active and user.is_authenticated and not user.is_superuser:
-            perm_policy = self.permission_helper.permission_policy
-            collections = perm_policy._collections_with_perm(
-                user, ['add', 'change', 'delete']
-            )
-            form_class.base_fields['collection'].queryset = collections
-            form_class.base_fields['collection'].choices.queryset = collections
-
-        return form_class
-
-
-class EditView(EditView):
-
-    def get_form_class(self):
-        form_class = super().get_form_class()
-        user = self.request.user
-
-        if user.is_active and user.is_authenticated and not user.is_superuser:
-            perm_policy = self.permission_helper.permission_policy
-            collections = perm_policy._collections_with_perm(
-                user, ['add', 'change', 'delete']
-            )
-            form_class.base_fields['collection'].queryset = collections
-            form_class.base_fields['collection'].choices.queryset = collections
-
-        return form_class
-
-
-class IndexView(IndexView):
-
-    def get_queryset(self, request=None):
-        if 'collection_id' in self.params:
-            if self.params.get('collection_id') == '':
-                del self.params['collection_id']
-
-        return super().get_queryset(request)
-
-    def get_context_data(self, **kwargs):
-        user = self.request.user
-
-        if user.is_active and user.is_authenticated and user.is_superuser:
-            self.collections = Collection.objects.all()
-        else:
-            perm_policy = self.permission_helper.permission_policy
-            self.collections = perm_policy._collections_with_perm(
-                user, ['add', 'change', 'delete']
-            )
-
-        context = {
-            'collections': self.collections
-        }
-        if 'collection_id' in self.params:
-            current_collection = Collection.objects.get(
-                id=self.params.get('collection_id')
-            )
-            context.update({'current_collection': current_collection})
-
-        context.update(kwargs)
-
-        return super().get_context_data(**context)
-
-
-class OrderModelAdmin(ModelAdmin):
+class OrderModelAdmin(CollectionModelAdmin):
     model = Order
     menu_order = 100
     menu_icon = 'list-ul'
@@ -167,14 +92,10 @@ class OrderModelAdmin(ModelAdmin):
     list_display = ('id', 'status', 'status_note', 'email',
                     'payment_date', 'total_items', 'total')
     list_filter = ('status', 'payment_date', 'email')
-    index_view_class = IndexView
-    create_view_class = CreateView
-    edit_view_class = EditView
     index_template_name = 'orders/index.html'
     inspect_view_enabled = True
     detail_view_class = DetailView
     button_helper_class = OrderButtonHelper
-    permission_helper_class = CustomCollectionPermissionHelper
 
     def get_queryset(self, request):
         user = request.user
@@ -215,13 +136,4 @@ class OrderModelAdmin(ModelAdmin):
         )
         return urls
 
-    def get_permissions_for_registration(self):
-        return Permission.objects.none()
-
-
-modeladmin_register(OrderModelAdmin)
-
-
-@hooks.register('register_group_permission_panel')
-def register_order_permissions_panel():
-    return GroupOrderPermissionFormSet
+collection_modeladmin_register(OrderModelAdmin)

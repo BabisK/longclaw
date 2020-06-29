@@ -94,6 +94,7 @@ setup(
         'djangorestframework==3.10.3',
         'django-ipware==2.1.0',
         'django-polymorphic==2.0.3',
+        'wagtail-collectionmodeladmin==0.1.4',
     ],
     license="MIT",
     zip_safe=False,
