@@ -1,6 +1,8 @@
 from django.forms import ModelForm, ModelChoiceField
+from django.utils.translation import gettext as _
 from longclaw.configuration.models import Configuration
-from longclaw.shipping.models import Address, Country
+from longclaw.shipping.models import Address, Country, ShippingRate
+from wagtail.admin.forms.collections import collection_member_permission_formset_factory
 
 class AddressForm(ModelForm):
     class Meta:
@@ -23,3 +25,12 @@ class AddressForm(ModelForm):
             queryset = Country.objects.exclude(shippingrate=None)
         self.fields['country'] = ModelChoiceField(queryset)
 
+
+GroupShippingRatePermissionFormSet = collection_member_permission_formset_factory(
+    ShippingRate,
+    [
+        ('add_shippingrate', _("Add"), _("Add/edit Shipping Rates you own")),
+        ('change_shippingrate', _("Edit"), _("Edit any Shipping Rate")),
+    ],
+    'shipping/permissions/includes/shipping_rate_permission_formset.html'
+)

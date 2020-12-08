@@ -2,9 +2,11 @@ import datetime
 from wagtail.core import hooks
 from wagtail.admin.site_summary import SummaryItem
 from longclaw.orders.models import Order
+from longclaw.products.models import ProductWithCollectionBase
 from longclaw.stats import stats
 from longclaw.configuration.models import Configuration
 from longclaw.utils import ProductVariant, maybe_get_product_model
+from wagtail.core.permission_policies.collections import CollectionPermissionPolicy
 
 
 class LongclawSummaryItem(SummaryItem):
@@ -22,7 +24,24 @@ class LongclawSummaryItem(SummaryItem):
 class OutstandingOrders(LongclawSummaryItem):
     order = 10
     def get_context(self):
-        orders = Order.objects.filter(status=Order.SUBMITTED)
+        user = self.request.user
+
+        orders = Order.objects.all()
+
+        if user.is_active and user.is_authenticated and not user.is_superuser:
+
+            permission_policy = CollectionPermissionPolicy(
+                Order, auth_model=Order
+            )
+
+            collections = permission_policy._collections_with_perm(
+                user, ['add', 'change', 'delete']
+            )
+
+            orders = Order.objects.filter(collection__in=collections)
+
+        orders = orders.filter(status=Order.SUBMITTED)
+
         return {
             'total': orders.count(),
             'text': 'Outstanding Orders',
@@ -35,7 +54,24 @@ class ProductCount(LongclawSummaryItem):
     def get_context(self):
         product_model = maybe_get_product_model()
         if product_model:
-            count = product_model.objects.all().count()
+            all_products = product_model.objects.all()
+            count = all_products.count()
+            if count > 0:
+                some_product = all_products[0]
+                if isinstance(some_product, ProductWithCollectionBase):
+                    user = self.request.user
+                    if user.is_active and user.is_authenticated and not user.is_superuser:
+                        permission_policy = CollectionPermissionPolicy(
+                            product_model, auth_model=product_model
+                        )
+
+                        collections = permission_policy._collections_with_perm(
+                            user, ['add', 'change', 'delete']
+                        )
+
+                        all_products = all_products.filter(collection__in=collections)
+                        count = all_products.count()
+
         else:
             count = ProductVariant.objects.all().count()
         return {
@@ -49,7 +85,7 @@ class MonthlySales(LongclawSummaryItem):
     order = 30
     def get_context(self):
         settings = Configuration.for_site(self.request.site)
-        sales = stats.sales_for_time_period(*stats.current_month())
+        sales = stats.sales_for_time_period(*stats.current_month(), self.request.user)
         return {
             'total': "{}{}".format(settings.currency_html_code,
                                    sum(order.total for order in sales)),
@@ -63,7 +99,7 @@ class LongclawStatsPanel(SummaryItem):
     template = 'stats/stats_panel.html'
     def get_context(self):
         month_start, month_end = stats.current_month()
-        daily_sales = stats.daily_sales(month_start, month_end)
+        daily_sales = stats.daily_sales(month_start, month_end, self.request.user)
         labels = [(month_start + datetime.timedelta(days=x)).strftime('%Y-%m-%d')
                   for x in range(0, datetime.datetime.now().day)]
         daily_income = [0] * len(labels)
@@ -71,7 +107,7 @@ class LongclawStatsPanel(SummaryItem):
             i = labels.index(k)
             daily_income[i] = float(sum(order.total for order in order_group))
 
-        popular_products = stats.sales_by_product(month_start, month_end)[:5]
+        popular_products = stats.sales_by_product(month_start, month_end, user=self.request.user)[:5]
         return {
             "daily_income": daily_income,
             "labels": labels,

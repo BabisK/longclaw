@@ -1,6 +1,7 @@
 """
 Shipping logic and payment capture API
 """
+from django.core.exceptions import FieldDoesNotExist
 from django.utils import timezone
 from django.db import transaction
 from rest_framework.decorators import api_view, permission_classes
@@ -41,6 +42,7 @@ def create_order_with_token(request):
                         status=status.HTTP_400_BAD_REQUEST)
 
     # Create the order
+
     order = create_order(
         email,
         request,

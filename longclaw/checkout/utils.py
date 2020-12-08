@@ -1,5 +1,5 @@
 from decimal import Decimal
-from django.utils.module_loading import import_string
+from django.core.exceptions import FieldDoesNotExist
 from django.utils import timezone
 from ipware.ip import get_real_ip
 
@@ -7,9 +7,11 @@ from longclaw.basket.utils import get_basket_items, destroy_basket
 from longclaw.shipping.utils import get_shipping_cost
 from longclaw.checkout.errors import PaymentError
 from longclaw.orders.models import Order, OrderItem
+from longclaw.products.models import ProductWithCollectionBase
 from longclaw.shipping.models import Address
 from longclaw.configuration.models import Configuration
 from longclaw.utils import GATEWAY
+from wagtail.core.models import Collection, get_root_collection_id
 
 
 def create_order(email,
@@ -23,6 +25,14 @@ def create_order(email,
     Create an order from a basket and customer infomation
     """
     basket_items, current_basket_id = get_basket_items(request)
+
+    collection_id = get_root_collection_id()
+
+    for item in basket_items:
+        if isinstance(item.variant.product, ProductWithCollectionBase):
+            collection_id = item.variant.product.collection.id
+            break
+
     if addresses:
         # Longclaw < 0.2 used 'shipping_name', longclaw > 0.2 uses a consistent
         # prefix (shipping_address_xxxx)
@@ -66,16 +76,19 @@ def create_order(email,
     if shipping_country and shipping_option:
         site_settings = Configuration.for_site(request.site)
         shipping_rate = get_shipping_cost(
+            request.user,
             site_settings,
             shipping_address.country.pk,
             shipping_option,
             basket_id=current_basket_id,
             destination=shipping_address,
+            collection_id=collection_id
         )['rate']
     else:
         shipping_rate = Decimal(0)
 
     order = Order(
+        collection=Collection.objects.get(pk=collection_id),
         email=email,
         ip_address=ip_address,
         shipping_address=shipping_address,

@@ -1,10 +1,8 @@
+from collectionmodeladmin.base import CollectionModelAdmin, collection_modeladmin_register
+from django.conf.urls import url
 from django.contrib.admin.utils import quote
 from django.utils.translation import ugettext as _
-from django.conf.urls import url
 
-from wagtail.contrib.modeladmin.options import (
-    ModelAdmin, modeladmin_register
-)
 from wagtail.contrib.modeladmin.helpers import ButtonHelper
 from wagtail.contrib.modeladmin.views import InspectView
 from longclaw.orders.models import Order
@@ -85,7 +83,7 @@ class DetailView(InspectView):
         return 'orders_detail.html'
 
 
-class OrderModelAdmin(ModelAdmin):
+class OrderModelAdmin(CollectionModelAdmin):
     model = Order
     menu_order = 100
     menu_icon = 'list-ul'
@@ -94,9 +92,26 @@ class OrderModelAdmin(ModelAdmin):
     list_display = ('id', 'status', 'status_note', 'email',
                     'payment_date', 'total_items', 'total')
     list_filter = ('status', 'payment_date', 'email')
+    index_template_name = 'orders/index.html'
     inspect_view_enabled = True
     detail_view_class = DetailView
     button_helper_class = OrderButtonHelper
+
+    def get_queryset(self, request):
+        user = request.user
+        if user.is_active and user.is_authenticated and user.is_superuser:
+            qs = self.model._default_manager.all()
+        else:
+            perm_policy = self.permission_helper.permission_policy
+            collections = perm_policy._collections_with_perm(
+                user, ['add', 'change', 'delete']
+            )
+            qs = self.model._default_manager.filter(collection__in=collections)
+        ordering = self.get_ordering(request)
+        if ordering:
+            qs = qs.order_by(*ordering)
+
+        return qs
 
     def detail_view(self, request, instance_pk):
         """
@@ -121,4 +136,4 @@ class OrderModelAdmin(ModelAdmin):
         )
         return urls
 
-modeladmin_register(OrderModelAdmin)
+collection_modeladmin_register(OrderModelAdmin)

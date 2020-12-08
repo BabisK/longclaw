@@ -1,9 +1,12 @@
 from datetime import datetime
 from django.db import models
+from django.utils.translation import gettext_lazy as _
+from wagtail.core.models import \
+    Collection, CollectionMember, get_root_collection_id
 from longclaw.settings import PRODUCT_VARIANT_MODEL
 from longclaw.shipping.models import Address
 
-class Order(models.Model):
+class Order(CollectionMember, models.Model):
     SUBMITTED = 1
     FULFILLED = 2
     CANCELLED = 3
@@ -37,6 +40,14 @@ class Order(models.Model):
                                         decimal_places=2,
                                         blank=True,
                                         null=True)
+
+    collection = models.ForeignKey(
+        Collection,
+        default=get_root_collection_id,
+        verbose_name=_('collection'),
+        related_name='+',
+        on_delete=models.PROTECT
+    )
 
     def __str__(self):
         return "Order #{} - {}".format(self.id, self.email)
